@@ -71,12 +71,12 @@ with c1:
     )
 with c2:
     st.session_state["w_stab"] = st.number_input(
-        "Stability (−vol) (обратная волатильность)",
+        "Stability (обратная волатильность)",
         min_value=0.0, max_value=1.0, value=float(st.session_state["w_stab"]), step=0.05
     )
 with c3:
     st.session_state["w_dd"] = st.number_input(
-        "Drawdown (−MDD) (максимальная историческая просадка)",
+        "Drawdown (максимальная историческая просадка)",
         min_value=0.0, max_value=1.0, value=float(st.session_state["w_dd"]), step=0.05
     )
 with c4:

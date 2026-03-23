@@ -204,3 +204,62 @@ if run:
         file_name="portfolio_selection_results.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+st.subheader("Проверка цены акции по SECID")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    check_secid = st.text_input("SECID акции", value="SBER").upper().strip()
+
+with col2:
+    buy_date = st.text_input("Дата покупки (YYYY-MM-DD)", value="2024-01-10")
+
+with col3:
+    sell_date = st.text_input("Дата продажи (YYYY-MM-DD)", value="2024-02-10")
+
+check_run = st.button("Показать цену покупки и продажи")
+
+if check_run:
+    try:
+        df_check = fetch_candles(check_secid, buy_date, sell_date, interval=24)
+
+        if df_check.empty:
+            st.error("По данной акции не найдено данных за указанный период.")
+        else:
+            df_check["date"] = pd.to_datetime(df_check["date"])
+
+            buy_dt = pd.to_datetime(buy_date)
+            sell_dt = pd.to_datetime(sell_date)
+
+            # Берем первую доступную цену не раньше даты покупки
+            buy_row = df_check[df_check["date"] >= buy_dt].sort_values("date").head(1)
+
+            # Берем последнюю доступную цену не позже даты продажи
+            sell_row = df_check[df_check["date"] <= sell_dt].sort_values("date").tail(1)
+
+            if buy_row.empty or sell_row.empty:
+                st.error("Не удалось найти цену покупки или продажи на выбранные даты.")
+            else:
+                buy_price = float(buy_row["close"].iloc[0])
+                buy_real_date = buy_row["date"].dt.strftime("%Y-%m-%d").iloc[0]
+
+                sell_price = float(sell_row["close"].iloc[0])
+                sell_real_date = sell_row["date"].dt.strftime("%Y-%m-%d").iloc[0]
+
+                ret = (sell_price / buy_price - 1.0) * 100
+
+                result_df = pd.DataFrame([{
+                    "secid": check_secid,
+                    "buy_date_requested": buy_date,
+                    "buy_date_actual": buy_real_date,
+                    "buy_price": buy_price,
+                    "sell_date_requested": sell_date,
+                    "sell_date_actual": sell_real_date,
+                    "sell_price": sell_price,
+                    "return_%": ret
+                }])
+
+                st.dataframe(result_df, use_container_width=True)
+
+    except Exception as e:
+        st.error(f"Ошибка при получении данных: {e}")

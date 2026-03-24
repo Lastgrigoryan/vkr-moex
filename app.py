@@ -6,6 +6,7 @@ from src.moex_iss import fetch_candles
 from src.factors import compute_factors_one
 from src.selection import score_and_select_top3
 from src.export import to_excel_bytes
+from src.markowitz import build_returns_matrix, markowitz_min_variance
 
 st.set_page_config(page_title="MOEX Portfolio Builder", layout="wide")
 st.title("Система формирования диверсифицированного портфеля (MOEX акции)")
@@ -152,11 +153,32 @@ if run:
     candles_df = pd.concat(all_candles, ignore_index=True)
     factors_df = pd.concat(factors_list, ignore_index=True)
 
+    # --- Портфель Марковица
+    markowitz_df = pd.DataFrame()
+    markowitz_summary = pd.DataFrame()
+
+    try:
+        returns_df = build_returns_matrix(candles_df)
+        markowitz_df, markowitz_summary = markowitz_min_variance(returns_df)
+    except Exception as e:
+        st.warning(f"Не удалось рассчитать портфель Марковица: {e}")
+
     scored, top3 = score_and_select_top3(
         factors=factors_df,
         sectors=sectors,
         w_mom=w_mom, w_stab=w_stab, w_dd=w_dd, w_liq=w_liq
     )
+
+    st.subheader("Портфель по методу Марковица")
+
+    if not markowitz_df.empty:
+        st.markdown("### Состав портфеля Марковица")
+        st.dataframe(markowitz_df, use_container_width=True)
+
+        st.markdown("### Сводные показатели портфеля Марковица")
+        st.dataframe(markowitz_summary, use_container_width=True)
+    else:
+        st.info("Портфель Марковица не был рассчитан.")
 
     st.subheader("Результаты")
     c1, c2 = st.columns(2)
@@ -195,6 +217,8 @@ if run:
         factors=factors_df,
         scored=scored,
         top3=top3,
+        markowitz=markowitz_df,
+        markowitz_summary=markowitz_summary,
         failed=pd.DataFrame(failed, columns=["secid", "reason"]) if failed else pd.DataFrame(columns=["secid", "reason"]),
     )
 

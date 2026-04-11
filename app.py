@@ -9,7 +9,7 @@ from src.export import to_excel_bytes
 from src.markowitz import build_returns_matrix, markowitz_min_variance
 
 st.set_page_config(page_title="MOEX Portfolio Builder", layout="wide")
-st.title("Система формирования диверсифицированного портфеля (MOEX акции)")
+st.title("Система формирования диверсифицированного портфеля акций")
 
 # --- Пресеты стратегий (веса факторов)
 PRESETS = {
@@ -131,7 +131,7 @@ if run:
     factors_list = []
     failed = []
 
-    with st.spinner("Скачиваю candles (MOEX ISS) и считаю факторы..."):
+    with st.spinner("Анализ свечей и расчет факторов..."):
         for i, secid in enumerate(tickers, 1):
             try:
                 dfc = fetch_candles(secid, date_from, date_till, interval=interval)

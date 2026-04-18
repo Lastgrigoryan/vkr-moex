@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 
-
 def compute_factors_one(candles: pd.DataFrame) -> pd.DataFrame:
     """
     candles: date, close, (value/volume)

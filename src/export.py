@@ -1,7 +1,6 @@
 import io
 import pandas as pd
 
-
 def to_excel_bytes(**sheets: pd.DataFrame) -> bytes:
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as writer:

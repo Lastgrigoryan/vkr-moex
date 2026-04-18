@@ -3,11 +3,13 @@ import pandas as pd
 
 
 def _z(s: pd.Series) -> pd.Series:
-    mu = s.mean()
-    sd = s.std(ddof=1)
-    if sd == 0 or np.isnan(sd):
+    med = s.median()
+    mad = (s - med).abs().median()
+
+    if mad == 0 or np.isnan(mad):
         return pd.Series([0.0] * len(s), index=s.index)
-    return (s - mu) / sd
+
+    return (s - med) / (1.4826 * mad)
 
 
 def score_and_select_top3(

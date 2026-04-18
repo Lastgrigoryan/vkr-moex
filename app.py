@@ -111,7 +111,7 @@ run = st.button("Рассчитать")
 
 if run:
     if sectors_file is None:
-        st.error("Нужно загрузить файл с колонками secid, sector (например sectors_final.csv)")
+        st.error("Нужно загрузить файл с колонками secid")
         st.stop()
 
     sectors = pd.read_csv(sectors_file, encoding="utf-8-sig", sep=None, engine="python")

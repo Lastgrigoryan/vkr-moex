@@ -20,13 +20,18 @@ def compute_factors_one(candles: pd.DataFrame) -> pd.DataFrame:
 
     vol = float(df["ret"].std(ddof=1)) if df["ret"].notna().sum() > 2 else np.nan
 
+    window = 252  # длина окна
+
     close = df["close"].astype(float).to_numpy()
-    if len(close) >= 2:
-        peak = np.maximum.accumulate(close)
-        dd = close / peak - 1.0
-        mdd = float(np.min(dd))  # negative
+
+    if len(close) >= window:
+        close_window = close[-window:]
     else:
-        mdd = np.nan
+        close_window = close
+
+    peak = np.maximum.accumulate(close_window)
+    dd = close_window / peak - 1.0
+    mdd = float(np.min(dd))
 
     # liquidity proxy: log(mean value or volume, last 60 days)
     liq = np.nan

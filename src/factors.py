@@ -35,10 +35,19 @@ def compute_factors_one(candles: pd.DataFrame) -> pd.DataFrame:
 
     # liquidity proxy: log(mean value or volume, last 60 days)
     liq = np.nan
+    eps = 0.01  # малое число для защиты от log(0)
+
     if "value" in df.columns and df["value"].notna().any():
-        liq = float(np.log(df["value"].tail(60).mean()))
+        vals = df["value"].tail(60).astype(float)
+        vals = vals[vals.notna()]
+        if len(vals) > 0:
+            liq = float(np.log(vals + eps).mean())
+
     elif "volume" in df.columns and df["volume"].notna().any():
-        liq = float(np.log(df["volume"].tail(60).mean()))
+        vals = df["volume"].tail(60).astype(float)
+        vals = vals[vals.notna()]
+        if len(vals) > 0:
+            liq = float(np.log(vals + eps).mean())
 
     return pd.DataFrame([{
         "secid": str(df["secid"].iloc[0]),

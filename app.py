@@ -40,20 +40,20 @@ st.subheader("Справочник отраслей")
 sectors_file = st.file_uploader("Загрузите файл", type=["csv"])
 
 # --- Кнопки стратегий (пресеты)
-st.subheader("Стратегия")
+st.subheader("Риск")
 
 strategy = st.segmented_control(
-    "Выберите стратегию",
-    ["Краткосрочный", "Среднесрочный", "Долгосрочный"],
-    default="Среднесрочный"
+    "Выберите степень риска",
+    ["Высокий", "Средний", "Низкий"],
+    default="Низкий"
 )
 
-if strategy == "Краткосрочный":
-    p = PRESETS["Краткосрочный (High Momentum)"]
-elif strategy == "Среднесрочный":
+if strategy == "Высокий":
+    p = PRESETS["Высокий (High Momentum)"]
+elif strategy == "Средний":
     p = PRESETS["Среднесрочный (Balanced)"]
 else:
-    p = PRESETS["Долгосрочный (Low Risk)"]
+    p = PRESETS["Низкий (Low Risk)"]
 
 st.session_state["w_mom"] = p["w_mom"]
 st.session_state["w_stab"] = p["w_stab"]

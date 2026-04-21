@@ -31,7 +31,7 @@ def score_and_select_top3(
     # базовые факторы
     df["mom"] = (df["mom_6m"] + df["mom_12m"]) / 2.0
     df["stab"] = -df["vol"]          # ниже вола -> выше стабильность
-    df["dd_good"] = -df["mdd"]       # меньше просадка -> лучше (mdd отриц.)
+    df["dd_good"] = df["mdd"]       # меньше просадка -> лучше (mdd отриц.)
 
     # ✅ Z-score по ВСЕМ акциям (глобально)
     df["z_mom"] = _z(df["mom"])

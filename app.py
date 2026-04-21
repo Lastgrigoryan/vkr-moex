@@ -72,7 +72,7 @@ with c1:
     )
 with c2:
     st.session_state["w_stab"] = st.number_input(
-        "Stability (обратная волатильность)",
+        "Stability (отрицательная волатильность)",
         min_value=0.0, max_value=1.0, value=float(st.session_state["w_stab"]), step=0.05
     )
 with c3:

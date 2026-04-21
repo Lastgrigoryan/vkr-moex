@@ -13,19 +13,19 @@ st.title("Система формирования диверсифицирова
 
 # --- Пресеты стратегий (веса факторов)
 PRESETS = {
-    "Краткосрочный (High Momentum)": {"w_mom": 0.60, "w_stab": 0.15, "w_dd": 0.15, "w_liq": 0.10},
-    "Среднесрочный (Balanced)":      {"w_mom": 0.35, "w_stab": 0.30, "w_dd": 0.20, "w_liq": 0.15},
-    "Долгосрочный (Low Risk)":       {"w_mom": 0.15, "w_stab": 0.45, "w_dd": 0.30, "w_liq": 0.10},
+    "Высокий (High Momentum)": {"w_mom": 0.60, "w_stab": 0.15, "w_dd": 0.15, "w_liq": 0.10},
+    "Средний (Balanced)":      {"w_mom": 0.35, "w_stab": 0.30, "w_dd": 0.20, "w_liq": 0.15},
+    "Низкий (Low Risk)":       {"w_mom": 0.15, "w_stab": 0.45, "w_dd": 0.30, "w_liq": 0.10},
 }
 
 # --- Инициализация весов в session_state (сохраняются при перезапуске страницы)
 if "w_mom" not in st.session_state:
-    p = PRESETS["Среднесрочный (Balanced)"]
+    p = PRESETS["Средний (Balanced)"]
     st.session_state["w_mom"] = p["w_mom"]
     st.session_state["w_stab"] = p["w_stab"]
     st.session_state["w_dd"] = p["w_dd"]
     st.session_state["w_liq"] = p["w_liq"]
-    st.session_state["preset_name"] = "Среднесрочный (Balanced)"
+    st.session_state["preset_name"] = "Средний (Balanced)"
 
 # --- Inputs
 colA, colB, colC = st.columns(3)

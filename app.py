@@ -9,7 +9,7 @@ from src.export import to_excel_bytes
 from src.markowitz import build_returns_matrix, markowitz_min_variance
 
 st.set_page_config(page_title="MOEX Portfolio Builder", layout="wide")
-st.title("Система формирования диверсифицированного портфеля акций")
+st.title("Формирование диверсифицированного портфеля акций на основе многофакторной модели")
 
 # --- Пресеты стратегий (веса факторов)
 PRESETS = {

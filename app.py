@@ -550,7 +550,7 @@ if calc_sharpe_btn:
             prices_df.sort_index(inplace=True)
 
             # Заполняем пропуски предыдущими значениями (если торги по акции не шли в этот день)
-            prices_df.fillna(method='ffill', inplace=True)
+            prices_df = prices_df.ffill()
 
             # Расчет ежедневных доходностей по каждой акции
             daily_returns = prices_df.pct_change().dropna()

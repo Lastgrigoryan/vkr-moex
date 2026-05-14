@@ -21,11 +21,7 @@ def score_and_select_top3(
     w_liq: float = 0.15,
     require_positive: bool = True,   # оставим фильтр score>0, можно выключить
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    ГЛОБАЛЬНОЕ скоринг-ранжирование:
-    - Z-score по всему списку акций (не по отрасли)
-    - Top-3 по каждой отрасли выбираются по глобальному score
-    """
+
     df = factors.merge(sectors, on="secid", how="inner").copy()
 
     # базовые факторы

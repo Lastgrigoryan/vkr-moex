@@ -476,3 +476,130 @@ if run_test_file:
         file_name="portfolio_test_result.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+# =========================
+# Автоматизированный расчет коэффициента Шарпа
+# =========================
+st.divider()
+st.subheader("📊 Автоматизированный расчет коэффициента Шарпа")
+st.markdown(
+    "Загрузите состав портфеля, чтобы система автоматически рассчитала его историческую волатильность (сигму) и коэффициент Шарпа.")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("**1. Параметры доходности и периода**")
+    sharpe_start = st.date_input("Начало периода анализа", pd.to_datetime("2025-01-01"), key="sharpe_start_date")
+    sharpe_end = st.date_input("Конец периода анализа", pd.to_datetime("2025-12-30"), key="sharpe_end_date")
+
+    # Ввод доходностей в процентах
+    portfolio_ret_pct = st.number_input("Фактическая доходность портфеля за период, %", value=15.0, step=0.5)
+    rf_rate_pct = st.number_input("Безрисковая ставка (на начало периода), %", value=12.0, step=0.5)
+
+with col2:
+    st.markdown("**2. Состав портфеля**")
+    sharpe_file = st.file_uploader("Загрузите CSV с тикерами (обязательна колонка secid)", type=["csv"],
+                                   key="sharpe_csv")
+
+    # Считаем ли портфель равновесным
+    is_equal_weight = st.checkbox("Считать портфель равновесным (доли распределены поровну)", value=True)
+
+calc_sharpe_btn = st.button("Рассчитать Шарпа")
+
+if calc_sharpe_btn:
+    if sharpe_file is None:
+        st.error("Пожалуйста, загрузите файл с тикерами.")
+    else:
+        # 1. Чтение файла
+        try:
+            df_tickers = pd.read_csv(sharpe_file, encoding="utf-8-sig", sep=None, engine="python")
+            df_tickers.columns = [str(c).strip().lower().replace("\ufeff", "") for c in df_tickers.columns]
+        except Exception as e:
+            st.error(f"Ошибка чтения файла: {e}")
+            st.stop()
+
+        if "secid" not in df_tickers.columns:
+            st.error(f"В файле нет колонки 'secid'. Найденные колонки: {df_tickers.columns.tolist()}")
+            st.stop()
+
+        tickers = df_tickers["secid"].astype(str).str.upper().str.strip().unique()
+
+        # 2. Сбор исторических данных
+        all_prices = {}
+        failed_tickers = []
+
+        with st.spinner(f"Загрузка исторических котировок для {len(tickers)} активов..."):
+            for secid in tickers:
+                try:
+                    dfc = fetch_candles(secid, sharpe_start.strftime("%Y-%m-%d"), sharpe_end.strftime("%Y-%m-%d"),
+                                        interval=24)
+                    if not dfc.empty:
+                        dfc['date'] = pd.to_datetime(dfc['date'])
+                        dfc.set_index('date', inplace=True)
+                        all_prices[secid] = dfc['close']
+                    else:
+                        failed_tickers.append(secid)
+                except Exception:
+                    failed_tickers.append(secid)
+
+        if failed_tickers:
+            st.warning(f"Не удалось получить данные для расчета волатильности по: {', '.join(failed_tickers)}")
+
+        if all_prices:
+            # 3. Формирование матрицы цен и расчет дневных доходностей
+            prices_df = pd.DataFrame(all_prices)
+            prices_df.sort_index(inplace=True)
+
+            # Заполняем пропуски предыдущими значениями (если торги по акции не шли в этот день)
+            prices_df.fillna(method='ffill', inplace=True)
+
+            # Расчет ежедневных доходностей по каждой акции
+            daily_returns = prices_df.pct_change().dropna()
+
+            # 4. Вычисление дневной доходности всего портфеля
+            if is_equal_weight:
+                # Если доли равны, дневная доходность портфеля - это среднее арифметическое доходностей акций
+                portfolio_daily_returns = daily_returns.mean(axis=1)
+            else:
+                # Если в файле была колонка weight, используем ее
+                if "weight" in df_tickers.columns:
+                    weights = df_tickers.set_index("secid")["weight"].to_dict()
+                    w_array = np.array([weights.get(col, 0) for col in daily_returns.columns])
+                    if w_array.sum() > 0:
+                        w_array = w_array / w_array.sum()  # Нормализуем веса
+                    portfolio_daily_returns = daily_returns.dot(w_array)
+                else:
+                    st.warning("Колонка 'weight' не найдена. Применен равновесный расчет.")
+                    portfolio_daily_returns = daily_returns.mean(axis=1)
+
+            # 5. Расчет волатильности (Сигмы)
+            daily_sigma = portfolio_daily_returns.std()
+            # Аннуализация (в году ~252 торговых дня)
+            annual_sigma = daily_sigma * np.sqrt(252)
+
+            # 6. Расчет коэффициента Шарпа
+            # Переводим введенные проценты в доли (15% -> 0.15)
+            rp = portfolio_ret_pct / 100.0
+            rf = rf_rate_pct / 100.0
+
+            if annual_sigma > 0:
+                sharpe_ratio = (rp - rf) / annual_sigma
+
+                # 7. Вывод результатов
+                st.success("Анализ волатильности и расчет коэффициента Шарпа успешно завершены!")
+
+                m1, m2, m3 = st.columns(3)
+                m1.metric("Избыточная доходность", f"{portfolio_ret_pct - rf_rate_pct:.2f}%")
+                m2.metric("Годовая волатильность (σ)", f"{annual_sigma * 100:.2f}%")
+
+                # Цвет Шарпа в зависимости от успешности
+                if sharpe_ratio > 1:
+                    m3.metric("Коэффициент Шарпа", f"{sharpe_ratio:.2f}", "Отлично")
+                elif sharpe_ratio > 0:
+                    m3.metric("Коэффициент Шарпа", f"{sharpe_ratio:.2f}", "Приемлемо", delta_color="off")
+                else:
+                    m3.metric("Коэффициент Шарпа", f"{sharpe_ratio:.2f}", "Ниже рынка", delta_color="inverse")
+
+            else:
+                st.error("Волатильность равна нулю. Невозможно рассчитать Шарпа.")
+        else:
+            st.error("Не удалось получить историю котировок для расчета волатильности.")

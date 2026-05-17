@@ -44,13 +44,13 @@ st.subheader("Риск")
 
 strategy = st.segmented_control(
     "Выберите степень риска",
-    ["Высокий", "Средний", "Низкий"],
-    default="Низкий"
+    ["Пресет 3", "Пресет 2", "Пресет 1"],
+    default="Пресет 1"
 )
 
-if strategy == "Высокий":
+if strategy == "Пресет 3":
     p = PRESETS["Высокий (High Momentum)"]
-elif strategy == "Средний":
+elif strategy == "Пресет 2":
     p = PRESETS["Среднесрочный (Balanced)"]
 else:
     p = PRESETS["Низкий (Low Risk)"]
